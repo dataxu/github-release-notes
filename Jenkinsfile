@@ -3,7 +3,7 @@ import src.dataxu.docker.*
 
 def general_utils = new dataxu.general.utils()
 def general_docker = new dataxu.docker.general(this)
-
+def VERSION = ""
 pipeline {
     agent { label 'slave-docker' }
     options {
@@ -40,10 +40,13 @@ pipeline {
         stage('Docker Push') {
             steps {
                 script {
-                    def VERSION = sh script: "docker run ${env.ecr_uri}/github-release-notes:dev-${GIT_COMMIT} npm -v github-release-notes", returnStdout: true
+                    VERSION = sh script: "docker run ${env.ecr_uri}/github-release-notes:dev-${GIT_COMMIT} npm -v github-release-notes", returnStdout: true
                     sh "docker tag ${env.ecr_uri}/github-release-notes:dev-${GIT_COMMIT} ${env.ecr_uri}/github-release-notes:rel-${VERSION}"
                     sh "docker tag ${env.ecr_uri}/github-release-notes:dev-${GIT_COMMIT} ${env.ecr_uri}/github-release-notes:latest"
                     sh "docker push ${env.ecr_uri}/github-release-notes:dev-${GIT_COMMIT}"
+                    sh "docker push ${env.ecr_uri}/github-release-notes:rel-${VERSION}"
+                    sh "docker push ${env.ecr_uri}/github-release-notes:latest"
+                    git_tag_version(tag: "${VERSION}", force: true)
                 }
             }
             post {
