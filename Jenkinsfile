@@ -56,7 +56,7 @@ pipeline {
     post {
         always {
             script {
-                general_docker.delete_image("${env.ecr_uri}/github-release-notes:${GIT_COMMIT}")
+                general_docker.delete_image("${env.ecr_uri}/github-release-notes:dev-${GIT_COMMIT}")
                 github_notify_status(stage_name: 'Pipeline complete')
             }
         }
