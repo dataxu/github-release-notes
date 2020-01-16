@@ -1,3 +1,3 @@
 FROM node:latest
 WORKDIR /workspace
-RUN npm install git-hub-release-notes -g
+RUN npm install github-release-notes -g
