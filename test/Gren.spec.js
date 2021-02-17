@@ -211,6 +211,22 @@ describe('Gren', () => {
                 };
                 assert.deepEqual(gren._groupBy(normal), [`All\n${normal[0].title}`], 'The issue does not match any labels, and goes in the ... group');
             });
+
+            it('Should format group using post formatter', () => {
+                const { normal, noLabel } = issues;
+
+                gren.options.groupBy = {
+                    'Test:': ['enhancement'],
+                    'Others:': ['closed']
+                };
+
+                gren.options.groupPostProcessor = (groupContent) => {
+                    return groupContent.replace(0, groupContent.indexOf(':\n') + 3);
+                }
+
+                assert.deepEqual(gren._groupBy(normal), [`Test:`], 'Passing one heading for one issue');
+                assert.deepEqual(gren._groupBy(noLabel), [`Others:`], 'Group option is "label" with no labels');
+            });
         });
 
         describe('_filterIssue', () => {
@@ -544,9 +560,10 @@ describe('Gren', () => {
 
             const receivedObject = gren._transformTagsIntoReleaseObjects([tag]);
 
-            assert.equals(tag.date, receivedObject.date);
-            assert.equals(tag.releaseId, receivedObject.id);
-            assert.equals(tag.name, receivedObject.name);
+            assert.equal(1, receivedObject.length)
+            assert.equal(tag.date, receivedObject[0].date);
+            assert.equal(tag.releaseId, receivedObject[0].id);
+            assert.equal(tag.tag.name, receivedObject[0].name);
         });
     });
 
@@ -609,11 +626,11 @@ describe('Gren', () => {
             describe('with tags=all', () => {
                 describe('with ignoreTagsWith', () => {
                     it('should ignore the specific tag', done => {
-                        gren.options.ignoreTagsWith = ['11'];
+                        gren.options.ignoreTagsWith = ['16'];
                         gren.options.tags = ['all'];
                         gren._getLastTags()
                             .then(tags => {
-                                assert.notInclude(tags.map(({ name }) => name), '0.11.0', 'The ignored tag is not present');
+                                assert.notInclude(tags.map(({ name }) => name), '0.16.0', 'The ignored tag is not present');
                                 done();
                             })
                             .catch(err => done(err));
@@ -624,7 +641,8 @@ describe('Gren', () => {
 
         describe('_getReleaseBlocks', () => {
             it('more than one tag', done => {
-                gren.options.tags = ['0.12.0', '0.11.0'];
+                gren.options.tags = ['0.17.2', '0.17.1'];
+                gren.options.dataSource = "commits";
                 gren._getReleaseBlocks()
                     .then(releaseBlocks => {
                         assert.isArray(releaseBlocks, 'The releaseBlocks is an Array');
@@ -637,7 +655,8 @@ describe('Gren', () => {
             }).timeout(10000);
 
             it('just one tag', done => {
-                gren.options.tags = ['0.11.0'];
+                gren.options.tags = ['0.17.2'];
+                gren.options.dataSource = "commits";
                 gren._getReleaseBlocks()
                     .then(releaseBlocks => {
                         assert.isArray(releaseBlocks, 'The releaseBlocks is an Array');
